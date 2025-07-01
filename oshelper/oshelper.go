@@ -6,7 +6,6 @@ import (
 	"os"
 	"reflect"
 	"syscall"
-	"unsafe"
 )
 
 var ErrRenameError = errors.New("rename in root error")
@@ -22,24 +21,9 @@ func RenameInRoot(root *os.Root, from, to string) error {
 		return err
 	}
 
-	fromBytes, err := syscall.BytePtrFromString(from)
+	err = syscall.Renameat(fd, from, fd, to)
 	if err != nil {
-		return fmt.Errorf("BytePtrFromString failed: %w", err)
-	}
-
-	toBytes, err := syscall.BytePtrFromString(to)
-	if err != nil {
-		return fmt.Errorf("BytePtrFromString failed: %w", err)
-	}
-
-	_, _, errno := syscall.Syscall6(
-		syscall.SYS_RENAMEAT,
-		uintptr(fd), uintptr(unsafe.Pointer(fromBytes)), //nolint:gosec
-		uintptr(fd), uintptr(unsafe.Pointer(toBytes)), //nolint:gosec
-		0, 0,
-	)
-	if errno != 0 {
-		return fmt.Errorf("failed to rename %s to %s: %w", from, to, errno)
+		return fmt.Errorf("failed to rename %s to %s: %w", from, to, err)
 	}
 
 	return nil
