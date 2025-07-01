@@ -16,16 +16,17 @@ type Prompter interface {
 	GetPromptForSlug(ctx context.Context, slug, links string, progress func(string)) (string, error)
 }
 
-func NewPrompter(gemini *gemini.Client, site string, root *os.Root) Prompter {
-	return &defaultPrompter{gemini, site, root, "", sync.Mutex{}}
+func NewPrompter(gemini *gemini.Client, site string, root *os.Root, rootPath string) Prompter {
+	return &defaultPrompter{gemini, site, root, rootPath, "", sync.Mutex{}}
 }
 
 type defaultPrompter struct {
-	gemini  *gemini.Client
-	site    string
-	root    *os.Root
-	outline string
-	mu      sync.Mutex
+	gemini   *gemini.Client
+	site     string
+	root     *os.Root
+	rootPath string
+	outline  string
+	mu       sync.Mutex
 }
 
 var ErrUnsafe = errors.New("unsafe topic")
@@ -151,7 +152,7 @@ func (p *defaultPrompter) initOutline(ctx context.Context, progress func(string)
 			return err
 		}
 
-		err = writeFileAtomic(p.root, outlineTXT, []byte(p.outline))
+		err = writeFileAtomic(p.root, p.rootPath, outlineTXT, []byte(p.outline))
 		if err != nil {
 			return err
 		}

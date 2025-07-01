@@ -190,6 +190,7 @@ func createHTTPHandler(
 	config *Config,
 	prefixRe *regexp.Regexp,
 	root *os.Root,
+	rootPath string,
 	gen *gemini.Client,
 	workerPool *server.WorkerPool,
 	servers map[string]*server.Server,
@@ -231,7 +232,7 @@ func createHTTPHandler(
 		if !ok {
 			var err error
 
-			s, err = newServer(root, gen, workerPool, prefix, config)
+			s, err = newServer(root, filepath.Join(rootPath, prefix), gen, workerPool, prefix, config)
 			if err != nil {
 				http.Error(
 					w,
@@ -301,7 +302,7 @@ func runServer(_ *cobra.Command, _ []string, config *Config) error {
 
 	workerPool := server.NewWorkerPool(numWorkers, numWorkers*workChannelCapacityPerWorker)
 
-	handler := createHTTPHandler(config, prefixRe, root, gen, workerPool, servers, &mu)
+	handler := createHTTPHandler(config, prefixRe, root, contentDir, gen, workerPool, servers, &mu)
 	http.HandleFunc("/", handler)
 
 	addr := fmt.Sprintf("%s:%d", config.host, config.port)
@@ -326,6 +327,7 @@ func runServer(_ *cobra.Command, _ []string, config *Config) error {
 
 func newServer(
 	root *os.Root,
+	rootPath string,
 	gen *gemini.Client,
 	workerPool *server.WorkerPool,
 	prefix string,
@@ -350,10 +352,10 @@ func newServer(
 		}
 	}
 
-	prompter := server.NewPrompter(gen, prefix, rr)
+	prompter := server.NewPrompter(gen, prefix, rr, rootPath)
 
 	transformer := createDefaultTransformer(prefix, config.baseURL)
-	site := server.NewSite(gen, prompter, rr, transformer)
+	site := server.NewSite(gen, prompter, rr, rootPath, transformer)
 
 	var unsafeHandler server.HandleFunc = func(w http.ResponseWriter) error {
 		handleStaticPath(w, "safety.html", root)
@@ -371,6 +373,7 @@ func handleRootPath(w http.ResponseWriter, root *os.Root) {
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Cache-Control", "public, max-age=3600")
 
 	_, err = w.Write(content)
 	if err != nil {
@@ -386,6 +389,7 @@ func handleStaticPath(w http.ResponseWriter, filename string, root *os.Root) {
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Cache-Control", "public, max-age=3600")
 
 	_, err = w.Write(content)
 	if err != nil {
@@ -401,9 +405,7 @@ func handleBannerPath(w http.ResponseWriter, root *os.Root) {
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
-	w.Header().Set("Pragma", "no-cache")
-	w.Header().Set("Expires", "0")
+	w.Header().Set("Cache-Control", "public, max-age=3600")
 
 	_, err = w.Write(content)
 	if err != nil {
@@ -459,6 +461,7 @@ func handleSitesAPI(w http.ResponseWriter, root *os.Root) {
 	})
 
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Cache-Control", "public, max-age=60")
 
 	err = json.NewEncoder(w).Encode(sites)
 	if err != nil {

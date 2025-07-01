@@ -4,11 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"os"
-
-	"github.com/jasonthorsness/ginprov/oshelper"
+	"path/filepath"
 )
 
-func writeFileAtomic(root *os.Root, slug string, v []byte) error {
+func writeFileAtomic(root *os.Root, rootPath string, slug string, v []byte) error {
 	const writePermissions = 0o644
 	tmpSlug := slug + ".tmp"
 
@@ -29,9 +28,9 @@ func writeFileAtomic(root *os.Root, slug string, v []byte) error {
 	}
 
 	//nolint:godox
-	// TODO
+	// TODO when we have go 1.25
 	// err = s.root.Rename(tmpSlug, slug)
-	err = oshelper.RenameInRoot(root, tmpSlug, slug)
+	err = os.Rename(filepath.Join(rootPath, tmpSlug), filepath.Join(rootPath, slug))
 	if err != nil {
 		return fmt.Errorf("failed to rename %s to %s: %w", tmpSlug, slug, err)
 	}

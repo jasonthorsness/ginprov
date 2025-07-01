@@ -56,8 +56,14 @@ type Site interface {
 	Handle(slug string) (HandleFunc, GenerateFunc, error)
 }
 
-func NewSite(gemini *gemini.Client, prompter Prompter, root *os.Root, transformer HTMLTransformer) Site {
-	return &defaultSite{gemini, nil, prompter, root, transformer, "", sync.Mutex{}, false}
+func NewSite(
+	gemini *gemini.Client,
+	prompter Prompter,
+	root *os.Root,
+	rootPath string,
+	transformer HTMLTransformer,
+) Site {
+	return &defaultSite{gemini, nil, prompter, root, rootPath, transformer, "", sync.Mutex{}, false}
 }
 
 type resource struct {
@@ -70,6 +76,7 @@ type defaultSite struct {
 	resources   map[string]*resource
 	prompter    Prompter
 	root        *os.Root
+	rootPath    string
 	transformer HTMLTransformer
 	links       string
 	mu          sync.Mutex
@@ -138,7 +145,7 @@ func (s *defaultSite) handleGenerate(slug string) (HandleFunc, GenerateFunc, err
 			}
 		}
 
-		err = writeFileAtomic(s.root, slug, v)
+		err = writeFileAtomic(s.root, s.rootPath, slug, v)
 		if err != nil {
 			return func(w http.ResponseWriter) error {
 				http.Error(
