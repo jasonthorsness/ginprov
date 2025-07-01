@@ -65,15 +65,79 @@ func addSocialCardMeta(head *html.Node, prefix, baseURL string) {
 		socialCardURL = "/" + prefix + "/colorful-social-card.jpg"
 	}
 
-	metaTag := &html.Node{
-		Type: html.ElementNode,
-		Data: "meta",
-		Attr: []html.Attribute{
-			{Key: "property", Val: "og:image", Namespace: ""},
-			{Key: "content", Val: socialCardURL, Namespace: ""},
+	metaTags := []*html.Node{
+		// Open Graph
+		{
+			Type: html.ElementNode,
+			Data: "meta",
+			Attr: []html.Attribute{
+				{Key: "property", Val: "og:image"},
+				{Key: "content", Val: socialCardURL},
+			},
+		},
+		{
+			Type: html.ElementNode,
+			Data: "meta",
+			Attr: []html.Attribute{
+				{Key: "property", Val: "og:title"},
+				{Key: "content", Val: prefix},
+			},
+		},
+		{
+			Type: html.ElementNode,
+			Data: "meta",
+			Attr: []html.Attribute{
+				{Key: "property", Val: "og:description"},
+				{Key: "content", Val: prefix},
+			},
+		},
+		{
+			Type: html.ElementNode,
+			Data: "meta",
+			Attr: []html.Attribute{
+				{Key: "property", Val: "og:url"},
+				{Key: "content", Val: strings.TrimSuffix(baseURL, "/") + "/" + prefix + "/"},
+			},
+		},
+
+		// Twitter Cards
+		{
+			Type: html.ElementNode,
+			Data: "meta",
+			Attr: []html.Attribute{
+				{Key: "name", Val: "twitter:card"},
+				{Key: "content", Val: "summary_large_image"},
+			},
+		},
+		{
+			Type: html.ElementNode,
+			Data: "meta",
+			Attr: []html.Attribute{
+				{Key: "name", Val: "twitter:title"},
+				{Key: "content", Val: prefix},
+			},
+		},
+		{
+			Type: html.ElementNode,
+			Data: "meta",
+			Attr: []html.Attribute{
+				{Key: "name", Val: "twitter:description"},
+				{Key: "content", Val: prefix},
+			},
+		},
+		{
+			Type: html.ElementNode,
+			Data: "meta",
+			Attr: []html.Attribute{
+				{Key: "name", Val: "twitter:image"},
+				{Key: "content", Val: socialCardURL},
+			},
 		},
 	}
-	head.AppendChild(metaTag)
+
+	for _, tag := range metaTags {
+		head.AppendChild(tag)
+	}
 }
 
 func insertBannerIframe(body *html.Node) error {
@@ -373,7 +437,7 @@ func handleRootPath(w http.ResponseWriter, root *os.Root) {
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Header().Set("Cache-Control", "public, max-age=3600")
+	w.Header().Set("Cache-Control", "public, max-age=10")
 
 	_, err = w.Write(content)
 	if err != nil {
@@ -461,7 +525,7 @@ func handleSitesAPI(w http.ResponseWriter, root *os.Root) {
 	})
 
 	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Cache-Control", "public, max-age=60")
+	w.Header().Set("Cache-Control", "public, max-age=10")
 
 	err = json.NewEncoder(w).Encode(sites)
 	if err != nil {

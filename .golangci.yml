@@ -21,6 +21,7 @@ linters:
         - ^google.golang.org\/genai\.ClientConfig
         - ^google.golang.org\/genai\.GenerateContentConfig
         - ^golang.org\/x\/net\/html\.Node
+        - ^golang.org\/x\/net\/html\.Attribute
     govet:
       enable-all: true
     nlreturn:
