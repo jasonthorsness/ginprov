@@ -1,6 +1,7 @@
 BIN_DIR := ./bin
 LDFLAGS := -s -w
 GOFLAGS := -trimpath
+CGO_ENABLED := 0
 
 .PHONY: all build clean ginprov lint test fmt refresh tidy
 
@@ -37,4 +38,3 @@ refresh: ginprov
 
 tidy:
 	go mod tidy
-

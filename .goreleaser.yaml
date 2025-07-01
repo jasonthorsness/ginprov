@@ -1,10 +1,11 @@
-version: 2
 builds:
   - id: ginprov
     main: ./cmd/ginprov
     binary: ginprov
-    goos: [darwin]
+    goos: [linux, windows, darwin]
     goarch: [amd64, arm64]
+    env:
+      - CGO_ENABLED=0
     flags:
       - -trimpath
     ldflags:
