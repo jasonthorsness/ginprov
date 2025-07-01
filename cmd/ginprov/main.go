@@ -25,7 +25,7 @@ import (
 	"golang.org/x/net/html"
 )
 
-//go:embed index.html notfound.html banner.html safety.html
+//go:embed index.html notfound.html banner.html safety.html favicon.ico robots.txt
 var staticFiles embed.FS
 
 func findHeadAndBody(doc *html.Node) (*html.Node, *html.Node) {
@@ -66,6 +66,15 @@ func addSocialCardMeta(head *html.Node, prefix, baseURL string) {
 	}
 
 	metaTags := []*html.Node{
+		// Standard meta description
+		{
+			Type: html.ElementNode,
+			Data: "meta",
+			Attr: []html.Attribute{
+				{Key: "name", Val: "description"},
+				{Key: "content", Val: "AI-generated content for " + prefix},
+			},
+		},
 		// Open Graph
 		{
 			Type: html.ElementNode,
@@ -151,6 +160,7 @@ func insertBannerIframe(body *html.Node) error {
 		Data: "iframe",
 		Attr: []html.Attribute{
 			{Key: "src", Val: "/banner.html", Namespace: ""},
+			{Key: "title", Val: "AI-generatedwarning banner and header", Namespace: ""},
 			{
 				Key: "style",
 				Val: "position: fixed !important; top: 0 !important; left: 0 !important; " +
@@ -250,6 +260,7 @@ func main() {
 
 const maxPrefixLength = 40
 
+//nolint:cyclop
 func createHTTPHandler(
 	config *Config,
 	prefixRe *regexp.Regexp,
@@ -264,12 +275,22 @@ func createHTTPHandler(
 		path := strings.Trim(r.URL.Path, "/")
 
 		if path == "" || path == "index.html" {
-			handleRootPath(w, root)
+			handleStaticFile(w, "index.html", "text/html; charset=utf-8", root)
 			return
 		}
 
 		if path == "banner.html" {
-			handleBannerPath(w, root)
+			handleStaticFile(w, "banner.html", "text/html; charset=utf-8", root)
+			return
+		}
+
+		if path == "favicon.ico" {
+			handleStaticFile(w, "favicon.ico", "image/x-icon", root)
+			return
+		}
+
+		if path == "robots.txt" {
+			handleStaticFile(w, "robots.txt", "text/plain", root)
 			return
 		}
 
@@ -285,7 +306,7 @@ func createHTTPHandler(
 		prefix = strings.Trim(prefix, "-")
 
 		if prefix != raw || len(prefix) > maxPrefixLength {
-			handleStaticPath(w, "notfound.html", root)
+			handleStaticFile(w, "notfound.html", "text/html; charset=utf-8", root)
 			return
 		}
 
@@ -422,54 +443,30 @@ func newServer(
 	site := server.NewSite(gen, prompter, rr, rootPath, transformer)
 
 	var unsafeHandler server.HandleFunc = func(w http.ResponseWriter) error {
-		handleStaticPath(w, "safety.html", root)
+		handleStaticFile(w, "safety.html", "text/html; charset=utf-8", root)
 		return nil
 	}
 
 	return server.NewServer(site, workerPool, slog.Default(), &server.DefaultProgressWriter{}, unsafeHandler), nil
 }
 
-func handleRootPath(w http.ResponseWriter, root *os.Root) {
-	content, err := getStaticFile("index.html", root)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Header().Set("Cache-Control", "public, max-age=10")
-
-	_, err = w.Write(content)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-}
-
-func handleStaticPath(w http.ResponseWriter, filename string, root *os.Root) {
+func handleStaticFile(w http.ResponseWriter, filename, contentType string, root *os.Root) {
 	content, err := getStaticFile(filename, root)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Header().Set("Cache-Control", "public, max-age=3600")
+	w.Header().Set("Content-Type", contentType)
 
-	_, err = w.Write(content)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-}
-
-func handleBannerPath(w http.ResponseWriter, root *os.Root) {
-	content, err := getStaticFile("banner.html", root)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+	var cacheControl string
+	if filename == "index.html" {
+		cacheControl = "public, max-age=10"
+	} else {
+		cacheControl = "public, max-age=3600"
 	}
 
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Header().Set("Cache-Control", "public, max-age=3600")
+	w.Header().Set("Cache-Control", cacheControl)
 
 	_, err = w.Write(content)
 	if err != nil {

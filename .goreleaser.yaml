@@ -3,7 +3,7 @@ version: 2
 builds:
   - main: ./cmd/ginprov
     binary: ginprov
-    goos: [linux, windows, darwin]
+    goos: [linux, darwin]
     goarch: [amd64, arm64]
     env:
       - CGO_ENABLED=0

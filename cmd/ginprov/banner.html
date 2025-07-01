@@ -2,7 +2,6 @@
 
 <head>
   <base href="/">
-  <link rel="canonical" href="https://ginprov.com" />
   <style>
     body {
       margin: 0;
@@ -12,14 +11,20 @@
     }
 
     .banner {
+      box-sizing: border-box;
+      min-height: 40px;
+      max-height: 80px;
+      overflow: hidden;
       background: #CC0000;
-      color: white;
-      padding: 8px;
+      color: #fff;
+      padding: 4px 8px;
       display: flex;
       flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
-      gap: 10px;
+      gap: 6px;
+      font-size: 14px;
+      line-height: 1.2;
       font-weight: bold;
     }
 
@@ -40,6 +45,12 @@
     @media (max-width: 1099px) {
       .home-link {
         order: 1;
+      }
+
+      .banner {
+        font-size: 10px;
+        line-height: 1.0;
+        gap: 3px;
       }
 
       .github-link {

@@ -51,6 +51,7 @@ Construction rules:
 - All links must be relative to the root and be a long, descriptive slug of the content (like company-owner-with-hat.jpg
   or goat-facts-continued.html).
 - The site must display well on both desktop and mobile devices.
+- Never use position: sticky;
 
 The outline should include the following sections: 
 - **Site Name And Paragraph Summary** - a short description of the site and its purpose
@@ -78,6 +79,7 @@ Construction rules:
 - All links must be relative to the root and be a long, descriptive slug of the content (like company-owner-with-hat.jpg
   or goat-facts-continued.html).
 - The site must display well on both desktop and mobile devices.
+- Never use position: sticky;
 
 The page YOU are producing is {{slug}}.
 
