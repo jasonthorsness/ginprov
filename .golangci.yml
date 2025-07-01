@@ -1,0 +1,72 @@
+version: "2"
+linters:
+  default: all
+  disable:
+    - wsl # deprecated
+    - funlen
+    - varnamelen
+    - ireturn
+    - containedctx
+    - testpackage
+    - depguard
+  settings:
+    exhaustruct:
+      exclude:
+        # structs intended to be partially initialized
+        - ^net\/http\.Transport
+        - ^net\/http\.Client
+        - ^net\/http\.Server
+        - ^net\/url\.URL
+        - ^github.com\/spf13\/cobra\.Command
+        - ^google.golang.org\/genai\.ClientConfig
+        - ^google.golang.org\/genai\.GenerateContentConfig
+        - ^golang.org\/x\/net\/html\.Node
+    govet:
+      enable-all: true
+    nlreturn:
+      block-size: 2
+    wsl_v5:
+      allow-first-in-block: true
+      allow-whole-block: false
+      branch-max-lines: 2
+      disable:
+        - decl
+    mnd:
+      ignored-numbers:
+        - "2"
+    wrapcheck:
+      ignore-sig-regexps:
+        - ^.*ginprov/sanitize\..*
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+    rules:
+      # no error wrapping for plain wrappers with "inner" field
+      - path: .*\.go$
+        linters:
+          - wrapcheck
+        source: inner\.
+      # exclude from test files
+      - path: _test\.go$
+        linters:
+          - mnd
+          - goconst
+          - cyclop
+
+formatters:
+  enable:
+    - gci
+    - gofmt
+    - gofumpt
+    - goimports
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
