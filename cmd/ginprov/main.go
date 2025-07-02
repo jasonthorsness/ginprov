@@ -272,7 +272,7 @@ func createHTTPHandler(
 	mu *sync.Mutex,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		path := strings.Trim(r.URL.Path, "/")
+		path := strings.TrimLeft(r.URL.Path, "/")
 
 		if path == "" || path == "index.html" {
 			handleStaticFile(w, "index.html", "text/html; charset=utf-8", root)
@@ -299,7 +299,7 @@ func createHTTPHandler(
 			return
 		}
 
-		raw, path, _ := strings.Cut(path, "/")
+		raw, path, ok := strings.Cut(path, "/")
 
 		prefix := strings.ToLower(raw)
 		prefix = prefixRe.ReplaceAllString(prefix, "-")
@@ -307,6 +307,11 @@ func createHTTPHandler(
 
 		if prefix != raw || len(prefix) > maxPrefixLength {
 			handleStaticFile(w, "notfound.html", "text/html; charset=utf-8", root)
+			return
+		}
+
+		if !ok {
+			http.Redirect(w, r, "/"+prefix+"/", http.StatusMovedPermanently)
 			return
 		}
 
