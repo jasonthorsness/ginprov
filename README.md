@@ -32,7 +32,7 @@ echo "GEMINI_API_KEY=your_api_key_here" > .env.local
 ### 2. Get Ginprov (Mac/Linux)
 
 ```bash
-curl -Ls "https://github.com/jasonthorsness/ginprov/releases/latest/download/ginprov_\
+curl -Ls "https://github.com/jasonthorsness/ginprov/releases/latest/download/ginprov_0.1.0_\
 $(uname -s | tr '[:upper:]' '[:lower:]')_\
 $(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')\
 .tar.gz" \
